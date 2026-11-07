@@ -71,9 +71,16 @@ final class Settings
         return '' !== $store ? $store : 'woocommerce';
     }
 
-    public function isEnabled(string $what): bool
+    public function isEnabled(string $what, string $default = 'yes'): bool
     {
-        return 'yes' === get_option('mautic_ecommerce_send_'.$what, 'yes');
+        return 'yes' === get_option('mautic_ecommerce_send_'.$what, $default);
+    }
+
+    public function getConsentMode(): string
+    {
+        return StorefrontEvents::CONSENT_ALWAYS === get_option('mautic_ecommerce_events_consent', StorefrontEvents::CONSENT_API)
+            ? StorefrontEvents::CONSENT_ALWAYS
+            : StorefrontEvents::CONSENT_API;
     }
 
     /**
@@ -119,6 +126,24 @@ final class Settings
                 'id'      => 'mautic_ecommerce_send_products',
                 'type'    => 'checkbox',
                 'default' => 'yes',
+            ],
+            [
+                'title'   => __('Send storefront events', 'mautic-ecommerce-woocommerce'),
+                'id'      => 'mautic_ecommerce_send_events',
+                'type'    => 'checkbox',
+                'default' => 'no',
+                'desc'    => __('Product views, cart changes and checkout starts of shoppers whose email is known, for abandoned cart and browse campaigns. Also switch on "Record storefront events" in Mautic.', 'mautic-ecommerce-woocommerce'),
+            ],
+            [
+                'title'   => __('Consent for events', 'mautic-ecommerce-woocommerce'),
+                'id'      => 'mautic_ecommerce_events_consent',
+                'type'    => 'select',
+                'default' => StorefrontEvents::CONSENT_API,
+                'options' => [
+                    StorefrontEvents::CONSENT_API    => __('Only with marketing consent from the WP Consent API (Complianz, CookieYes, …)', 'mautic-ecommerce-woocommerce'),
+                    StorefrontEvents::CONSENT_ALWAYS => __('Always: this shop handles consent another way', 'mautic-ecommerce-woocommerce'),
+                ],
+                'desc'    => __('Do Not Track and Global Privacy Control always stop events.', 'mautic-ecommerce-woocommerce'),
             ],
             [
                 'type' => 'sectionend',

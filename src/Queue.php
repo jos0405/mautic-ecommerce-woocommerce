@@ -48,6 +48,26 @@ final class Queue
     }
 
     /**
+     * Runs once, $delay seconds from now; a job already waiting for the same arguments is kept.
+     *
+     * @param array<string, scalar> $args
+     */
+    public function pushLater(string $type, array $args, int $delay): void
+    {
+        $job = [$type, $args];
+
+        if (!function_exists('as_schedule_single_action')) {
+            $this->process($type, $args);
+
+            return;
+        }
+
+        if (!as_has_scheduled_action(self::HOOK, $job, self::GROUP)) {
+            as_schedule_single_action(time() + $delay, self::HOOK, $job, self::GROUP);
+        }
+    }
+
+    /**
      * @param array<string, scalar> $args
      */
     public function process(string $type, array $args): void

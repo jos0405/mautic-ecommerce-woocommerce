@@ -16,11 +16,15 @@ final class Plugin
         $queue    = new Queue($client);
         $products = new ProductSync($settings, $queue);
         $orders   = new OrderSync($settings, $queue);
+        $restore  = new CartRestore();
+        $events   = new StorefrontEvents($settings, $queue, $restore);
 
         $settings->register();
         $queue->register();
         $products->register();
         $orders->register();
+        $restore->register();
+        $events->register();
 
         if (defined('WP_CLI') && WP_CLI) {
             \WP_CLI::add_command('mautic-ecommerce', new Cli($settings, $client, $products, $orders));
