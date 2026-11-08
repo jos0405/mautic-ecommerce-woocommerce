@@ -8,7 +8,7 @@ Status: 0.3.0, in development.
 
 | When | What | Mautic endpoint |
 |------|------|-----------------|
-| An order becomes processing or completed | The order: number, total, currency, paid date, billing email, shipping city, line items (SKU or variation/product ID, product ID, name, quantity, unit price incl. tax, main category) | `/ecommerce/order` |
+| An order becomes processing or completed | The order: number, total, currency, paid date, billing email, shipping city, line items (SKU or variation/product ID, product ID, name, quantity, unit price incl. tax, main category), and the Mautic email link the shopper came from (`ct`, with consent) so Mautic credits that email and campaign | `/ecommerce/order` |
 | A refund (partial or full) or a cancellation | The same order again, with `status`, `refunded_total` and `refunded_qty` per line; Mautic updates it | `/ecommerce/order` |
 | A product is created, saved, changes stock, or is trashed/deleted | The product: ID, SKU, name, link, image, prices, categories and main category, variation IDs, stock, status | `/ecommerce/product` |
 | A known shopper views a product | `viewed_product` with the product | `/ecommerce/event` |

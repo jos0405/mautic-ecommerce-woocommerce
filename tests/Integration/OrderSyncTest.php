@@ -8,6 +8,7 @@ use MauticEcommerceWooCommerce\Client;
 use MauticEcommerceWooCommerce\OrderSync;
 use MauticEcommerceWooCommerce\Queue;
 use MauticEcommerceWooCommerce\Settings;
+use MauticEcommerceWooCommerce\StorefrontEvents;
 
 final class OrderSyncTest extends TestCase
 {
@@ -51,6 +52,25 @@ final class OrderSyncTest extends TestCase
             ],
             $payload['items']
         );
+    }
+
+    public function test_order_from_a_mautic_email_link_carries_the_link(): void
+    {
+        $ct = 'YTozOntzOjY6InNvdXJjZSI7YToyOntpOjA7czo1OiJlbWFpbCI7aToxO2k6MTt9czo1OiJlbWFpbCI7aToxO3M6NDoic3RhdCI7czoyMjoiNmFlZjg5YmU1OWY3MDc4MjA0NzIzNiI7fQ==';
+        WC()->session = null;
+        WC()->initialize_session();
+        WC()->session->set(StorefrontEvents::SESSION_CLICKTHROUGH, $ct);
+
+        $order = $this->createOrder([[$this->createProduct('Candle', '10'), 1]]);
+        do_action('woocommerce_checkout_order_created', $order);
+
+        $this->assertSame($ct, $this->orders->build(wc_get_order($order->get_id()))['ct']);
+
+        // Without a link: no "ct".
+        WC()->session->set(StorefrontEvents::SESSION_CLICKTHROUGH, null);
+        $plain = $this->createOrder([[$this->createProduct('Soap', '4'), 1]]);
+        do_action('woocommerce_checkout_order_created', $plain);
+        $this->assertArrayNotHasKey('ct', $this->orders->build(wc_get_order($plain->get_id())));
     }
 
     public function test_unpaid_orders_are_not_sent(): void

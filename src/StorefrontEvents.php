@@ -42,12 +42,16 @@ final class StorefrontEvents
     {
         add_filter('mautic_ecommerce_build_event', [$this, 'buildJob'], 10, 2);
 
+        // The email link identifies guests for events and attributes orders to the email.
+        if ($this->settings->isEnabled('events', 'no') || $this->settings->isEnabled('orders')) {
+            // Before CartRestore (20), which redirects: restore-cart links in Mautic emails carry "ct" too.
+            add_action('wp_loaded', [$this, 'captureClickthrough'], 5);
+        }
+
         if (!$this->settings->isEnabled('events', 'no')) {
             return;
         }
 
-        // Before CartRestore (20), which redirects: restore-cart links in Mautic emails carry "ct" too.
-        add_action('wp_loaded', [$this, 'captureClickthrough'], 5);
         add_action('template_redirect', [$this, 'onPage']);
         add_action('woocommerce_add_to_cart', [$this, 'onCartChanged'], 20);
         add_action('woocommerce_cart_item_removed', [$this, 'onCartChanged'], 20);
@@ -137,9 +141,19 @@ final class StorefrontEvents
             return ['email' => $email];
         }
 
-        $ct = null !== WC()->session ? WC()->session->get(self::SESSION_CLICKTHROUGH) : null;
+        $ct = self::sessionClickthrough();
 
-        return is_string($ct) && self::isClickthrough($ct) ? ['ct' => $ct] : null;
+        return null !== $ct ? ['ct' => $ct] : null;
+    }
+
+    /**
+     * The "ct" of the Mautic email link this visitor arrived from, if one was kept (with consent).
+     */
+    public static function sessionClickthrough(): ?string
+    {
+        $ct = function_exists('WC') && null !== WC()->session ? WC()->session->get(self::SESSION_CLICKTHROUGH) : null;
+
+        return is_string($ct) && self::isClickthrough($ct) ? $ct : null;
     }
 
     private function shopperEmail(): ?string

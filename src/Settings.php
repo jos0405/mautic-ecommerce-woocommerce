@@ -135,7 +135,7 @@ final class Settings
                 'desc'    => __('Product views, cart changes and checkout starts of shoppers whose email is known, for abandoned cart and browse campaigns. Also switch on "Record storefront events" in Mautic.', 'mautic-ecommerce-woocommerce'),
             ],
             [
-                'title'   => __('Consent for events', 'mautic-ecommerce-woocommerce'),
+                'title'   => __('Consent for tracking', 'mautic-ecommerce-woocommerce'),
                 'id'      => 'mautic_ecommerce_events_consent',
                 'type'    => 'select',
                 'default' => StorefrontEvents::CONSENT_API,
@@ -143,7 +143,7 @@ final class Settings
                     StorefrontEvents::CONSENT_API    => __('Only with marketing consent from the WP Consent API (Complianz, CookieYes, …)', 'mautic-ecommerce-woocommerce'),
                     StorefrontEvents::CONSENT_ALWAYS => __('Always: this shop handles consent another way', 'mautic-ecommerce-woocommerce'),
                 ],
-                'desc'    => __('Do Not Track and Global Privacy Control always stop events.', 'mautic-ecommerce-woocommerce'),
+                'desc'    => __('Applies to storefront events and to remembering which Mautic email a shopper came from (to credit the email with the order). Do Not Track and Global Privacy Control always stop both.', 'mautic-ecommerce-woocommerce'),
             ],
             [
                 'type' => 'sectionend',

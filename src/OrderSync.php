@@ -21,6 +21,11 @@ final class OrderSync
         'cancelled'  => 'cancelled',
     ];
 
+    /**
+     * Order meta: the "ct" of the Mautic email link the shopper arrived from, for attribution.
+     */
+    public const META_CLICKTHROUGH = '_mautic_ecommerce_ct';
+
     public function __construct(
         private Settings $settings,
         private Queue $queue,
@@ -35,9 +40,27 @@ final class OrderSync
             return;
         }
 
+        // Classic and block checkout.
+        add_action('woocommerce_checkout_order_created', [$this, 'attachClickthrough']);
+        add_action('woocommerce_store_api_checkout_order_processed', [$this, 'attachClickthrough']);
         add_action('woocommerce_order_status_changed', [$this, 'onStatusChanged'], 10, 3);
         // Partial refunds do not change the status.
         add_action('woocommerce_order_refunded', [$this, 'queueOrder']);
+    }
+
+    /**
+     * Keeps the email link the shopper arrived from on the order, so Mautic credits the email and
+     * campaign with the revenue; it is sent with the order and again with refunds.
+     */
+    public function attachClickthrough(\WC_Order $order): void
+    {
+        $ct = StorefrontEvents::sessionClickthrough();
+        if (null === $ct || '' !== (string) $order->get_meta(self::META_CLICKTHROUGH)) {
+            return;
+        }
+
+        $order->update_meta_data(self::META_CLICKTHROUGH, $ct);
+        $order->save_meta_data();
     }
 
     public function onStatusChanged(int $orderId, string $from, string $to): void
@@ -116,10 +139,20 @@ final class OrderSync
             'email'          => $order->get_billing_email(),
             'location'       => $order->get_shipping_city() ?: null,
             'items'          => $items,
-        ];
+        ] + $this->clickthrough($order);
     }
 
     public const BATCH_SIZE = 100;
+
+    /**
+     * @return array{ct?: string}
+     */
+    private function clickthrough(\WC_Order $order): array
+    {
+        $ct = (string) $order->get_meta(self::META_CLICKTHROUGH);
+
+        return StorefrontEvents::isClickthrough($ct) ? ['ct' => $ct] : [];
+    }
 
     /**
      * Sends paid, refunded and cancelled orders, oldest first. Mautic never triggers campaigns
