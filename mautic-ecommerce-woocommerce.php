@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       Mautic Ecommerce for WooCommerce
- * Plugin URI:        https://github.com/FriendlyDotCH/mautic-ecommerce-woocommerce
+ * Plugin URI:        https://github.com/jos0405/mautic-ecommerce-woocommerce
  * Description:       Sends orders, refunds and the product catalog to Mautic's Ecommerce Connector.
  * Version:           0.3.0
  * Requires at least: 6.5
