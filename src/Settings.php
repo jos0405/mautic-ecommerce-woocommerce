@@ -135,6 +135,17 @@ final class Settings
                 'default' => 'yes',
             ],
             [
+                'title'   => __('Allow Mautic to create coupons', 'mautic-ecommerce-woocommerce'),
+                'desc'    => sprintf(
+                    /* translators: %s: URL */
+                    __('For Mautic\'s "Issue coupon" campaign action: single-use coupons for one email address. In Mautic, set the shop coupon endpoint to %s', 'mautic-ecommerce-woocommerce'),
+                    '<code>'.esc_html(rest_url(CouponEndpoint::NAMESPACE.CouponEndpoint::ROUTE)).'</code>'
+                ),
+                'id'      => CouponEndpoint::OPTION,
+                'type'    => 'checkbox',
+                'default' => 'no',
+            ],
+            [
                 'title'   => __('Send storefront events', 'mautic-ecommerce-woocommerce'),
                 'id'      => 'mautic_ecommerce_send_events',
                 'type'    => 'checkbox',

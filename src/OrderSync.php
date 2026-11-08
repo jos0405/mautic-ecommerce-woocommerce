@@ -139,6 +139,8 @@ final class OrderSync
             'email'          => $order->get_billing_email(),
             'location'       => $order->get_shipping_city() ?: null,
             'items'          => $items,
+            // So Mautic knows which coupons it issued were used.
+            'coupons'        => array_values($order->get_coupon_codes()),
         ] + $this->clickthrough($order);
     }
 

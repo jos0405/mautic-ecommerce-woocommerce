@@ -2,13 +2,13 @@
 
 Connects a WooCommerce shop to the [Ecommerce Connector for Mautic](https://github.com/FriendlyDotCH/ecommerce-connector-for-mautic): sends orders, refunds, cancellations and the product catalog, signed with the connector's webhook secret.
 
-Status: 0.4.0, in development.
+Status: 0.5.0, in development.
 
 ## What it sends
 
 | When | What | Mautic endpoint |
 |------|------|-----------------|
-| An order becomes processing or completed | The order: number, total, currency, paid date, billing email, shipping city, line items (SKU or variation/product ID, product ID, name, quantity, unit price incl. tax, main category), and the Mautic email link the shopper came from (`ct`, with consent) so Mautic credits that email and campaign | `/ecommerce/order` |
+| An order becomes processing or completed | The order: number, total, currency, paid date, billing email, shipping city, line items (SKU or variation/product ID, product ID, name, quantity, unit price incl. tax, main category), the coupon codes used, and the Mautic email link the shopper came from (`ct`, with consent) so Mautic credits that email and campaign | `/ecommerce/order` |
 | A refund (partial or full) or a cancellation | The same order again, with `status`, `refunded_total` and `refunded_qty` per line; Mautic updates it | `/ecommerce/order` |
 | A product is created, saved, changes stock, or is trashed/deleted | The product: ID, SKU, name, link, image, prices, categories and main category, variation IDs, stock, status | `/ecommerce/product` |
 | Once a week, at night | All products again, in case Mautic missed a change (**Weekly full product sync**, on by default) | `/ecommerce/product` |
@@ -31,9 +31,15 @@ Off by default: switch on **Send storefront events** here, and **Record storefro
 
 Sending runs in the background through WooCommerce's Action Scheduler (Tools → Scheduled Actions, group `mautic-ecommerce`), so checkout and product saves never wait for Mautic. On low-traffic shops, run WP-Cron from a real cron job so queued sends are not delayed.
 
+## Coupons from Mautic
+
+With **Allow Mautic to create coupons** ticked (off by default), Mautic's **Issue coupon** campaign action creates coupons at `POST /wp-json/mautic-ecommerce/v1/coupon`; the setting shows this shop's exact URL, which goes into Mautic as **Shop coupon endpoint**. Each coupon is single-use, for the contact's email only (WooCommerce's *Allowed emails*), individual use, expires at the end of its last day (shop time), and is marked with the email in `_mautic_ecommerce_coupon_email`. Mautic chooses the code, value, minimum spend, sale-item and free-shipping options.
+
+Requests must carry Mautic's signature (HMAC-SHA256 of the body with the webhook secret, `X-Mautic-Ecommerce-Signature`) and a timestamp less than 5 minutes old. The same code sent again for the same email answers as created (a retry); for another email it is refused. Veto coupons with the `mautic_ecommerce_coupon_allowed` filter (`$allowed`, `$data`), for example above a maximum value. Orders send their coupon codes, so Mautic knows which coupons were used.
+
 ## Setup
 
-1. In Mautic, install the Ecommerce Connector (1.7.0 or later; **Test connection** and guests from Mautic emails need the build with `/ecommerce/ping`), activate it and set a webhook secret.
+1. In Mautic, install the Ecommerce Connector (1.7.0 or later; coupons need 1.8.0), activate it and set a webhook secret.
 2. Install and activate this plugin.
 3. In WooCommerce → Settings → **Mautic**: the Mautic URL, the same webhook secret, and a store name (default `woocommerce`; it becomes the order source and catalog name in Mautic).
 4. Click **Test connection** under *Connection and sync*. It sends a signed request and says whether Mautic accepted the secret.

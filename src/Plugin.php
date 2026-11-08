@@ -20,6 +20,7 @@ final class Plugin
         $events   = new StorefrontEvents($settings, $queue, $restore);
         $bulkSync = new BulkSync($client, $products, $orders);
         $weekly   = new WeeklySync($settings, $bulkSync);
+        $coupons  = new CouponEndpoint($settings);
         $tools    = new AdminTools($settings, $client, $bulkSync);
 
         $settings->register();
@@ -30,6 +31,7 @@ final class Plugin
         $events->register();
         $bulkSync->register();
         $weekly->register();
+        $coupons->register();
 
         if (is_admin()) {
             $tools->register();
