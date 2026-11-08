@@ -128,6 +128,13 @@ final class Settings
                 'default' => 'yes',
             ],
             [
+                'title'   => __('Weekly full product sync', 'mautic-ecommerce-woocommerce'),
+                'desc'    => __('Send all products once a week, at night, in case Mautic missed a change.', 'mautic-ecommerce-woocommerce'),
+                'id'      => WeeklySync::OPTION,
+                'type'    => 'checkbox',
+                'default' => 'yes',
+            ],
+            [
                 'title'   => __('Send storefront events', 'mautic-ecommerce-woocommerce'),
                 'id'      => 'mautic_ecommerce_send_events',
                 'type'    => 'checkbox',

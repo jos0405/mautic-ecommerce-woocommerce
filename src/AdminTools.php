@@ -58,6 +58,15 @@ final class AdminTools
                     </button>
                     <?php echo wp_kses_post($this->describe('products')); ?>
                 </p>
+                <?php $next = WeeklySync::nextRun(); ?>
+                <?php if (null !== $next) { ?>
+                    <p class="description">
+                        <?php
+                        /* translators: %s: date and time */
+                        echo esc_html(sprintf(__('Next weekly product sync: %s', 'mautic-ecommerce-woocommerce'), wp_date(get_option('date_format').' '.get_option('time_format'), $next)));
+                        ?>
+                    </p>
+                <?php } ?>
                 <p>
                     <label>
                         <?php esc_html_e('Orders since', 'mautic-ecommerce-woocommerce'); ?>

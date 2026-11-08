@@ -2,7 +2,7 @@
 
 Connects a WooCommerce shop to the [Ecommerce Connector for Mautic](https://github.com/FriendlyDotCH/ecommerce-connector-for-mautic): sends orders, refunds, cancellations and the product catalog, signed with the connector's webhook secret.
 
-Status: 0.3.0, in development.
+Status: 0.4.0, in development.
 
 ## What it sends
 
@@ -11,6 +11,7 @@ Status: 0.3.0, in development.
 | An order becomes processing or completed | The order: number, total, currency, paid date, billing email, shipping city, line items (SKU or variation/product ID, product ID, name, quantity, unit price incl. tax, main category), and the Mautic email link the shopper came from (`ct`, with consent) so Mautic credits that email and campaign | `/ecommerce/order` |
 | A refund (partial or full) or a cancellation | The same order again, with `status`, `refunded_total` and `refunded_qty` per line; Mautic updates it | `/ecommerce/order` |
 | A product is created, saved, changes stock, or is trashed/deleted | The product: ID, SKU, name, link, image, prices, categories and main category, variation IDs, stock, status | `/ecommerce/product` |
+| Once a week, at night | All products again, in case Mautic missed a change (**Weekly full product sync**, on by default) | `/ecommerce/product` |
 | A known shopper views a product | `viewed_product` with the product | `/ecommerce/event` |
 | A known shopper changes their cart | `added_to_cart` with the cart contents, total and a restore-cart link, 60 seconds after the last change | `/ecommerce/event` |
 | A known shopper opens checkout | `started_checkout` with the cart | `/ecommerce/event` |
@@ -44,6 +45,8 @@ Sending runs in the background through WooCommerce's Action Scheduler (Tools →
    ```
 
    Mautic never triggers campaigns for orders placed more than a day before they arrive, so the order import sends no emails.
+
+After that, changes are sent as they happen. As a safety net for changes Mautic missed (Mautic down, a wrong secret for a while), all products are sent again once a week: at a time picked once per site between 01:00 and 05:00 site time, on a random weekday, so shops sharing one Mautic do not sync at the same moment. The settings page shows the next run; switch it off with **Weekly full product sync**. It is scheduled when an administrator opens the WordPress admin and removed when the plugin is deactivated. Resending unchanged products changes nothing in Mautic and triggers no product alerts.
 
 `wp mautic-ecommerce status` shows the settings, `wp mautic-ecommerce test` tests the connection. Mautic answers every request with 204; requests it rejects (wrong secret, invalid data) are explained in Mautic's log.
 

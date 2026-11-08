@@ -19,6 +19,7 @@ final class Plugin
         $restore  = new CartRestore();
         $events   = new StorefrontEvents($settings, $queue, $restore);
         $bulkSync = new BulkSync($client, $products, $orders);
+        $weekly   = new WeeklySync($settings, $bulkSync);
         $tools    = new AdminTools($settings, $client, $bulkSync);
 
         $settings->register();
@@ -28,6 +29,7 @@ final class Plugin
         $restore->register();
         $events->register();
         $bulkSync->register();
+        $weekly->register();
 
         if (is_admin()) {
             $tools->register();
