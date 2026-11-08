@@ -109,32 +109,48 @@ final class ProductSync
         $page = 1;
 
         do {
-            $ids = wc_get_products([
-                'type'   => ['simple', 'variable', 'grouped', 'external'],
-                'status' => ['publish', 'private', 'draft', 'pending'],
-                'limit'  => self::BATCH_SIZE,
-                'page'   => $page++,
-                'return' => 'ids',
-                'orderby' => 'ID',
-                'order'  => 'ASC',
-            ]);
-
-            $products = [];
-            foreach ($ids as $id) {
-                $product = wc_get_product($id);
-                if ($product instanceof \WC_Product) {
-                    $products[] = $this->build($product);
-                }
-            }
-
-            if ([] !== $products) {
-                $client->send('product', ['store' => $this->settings->getStore(), 'products' => $products]);
-                $sent += count($products);
+            $batch = $this->syncPage($client, $page++);
+            if ($batch['sent'] > 0) {
+                $sent += $batch['sent'];
                 $progress($sent);
             }
-        } while (count($ids) === self::BATCH_SIZE);
+        } while (self::BATCH_SIZE === $batch['fetched']);
 
         return $sent;
+    }
+
+    /**
+     * Sends one page of BATCH_SIZE products in one request; the bulk sync runs page by page.
+     *
+     * @return array{fetched: int, sent: int} fetched below BATCH_SIZE means this was the last page
+     *
+     * @throws \RuntimeException when Mautic cannot be reached
+     */
+    public function syncPage(Client $client, int $page): array
+    {
+        $ids = wc_get_products([
+            'type'    => ['simple', 'variable', 'grouped', 'external'],
+            'status'  => ['publish', 'private', 'draft', 'pending'],
+            'limit'   => self::BATCH_SIZE,
+            'page'    => max(1, $page),
+            'return'  => 'ids',
+            'orderby' => 'ID',
+            'order'   => 'ASC',
+        ]);
+
+        $products = [];
+        foreach ($ids as $id) {
+            $product = wc_get_product($id);
+            if ($product instanceof \WC_Product) {
+                $products[] = $this->build($product);
+            }
+        }
+
+        if ([] !== $products) {
+            $client->send('product', ['store' => $this->settings->getStore(), 'products' => $products]);
+        }
+
+        return ['fetched' => count($ids), 'sent' => count($products)];
     }
 
     /**

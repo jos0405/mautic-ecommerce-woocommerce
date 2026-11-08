@@ -1,2 +1,4 @@
 /vendor/
 .DS_Store
+/tests/config.local.php
+/.phpunit.result.cache

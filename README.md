@@ -2,7 +2,7 @@
 
 Connects a WooCommerce shop to the [Ecommerce Connector for Mautic](https://github.com/FriendlyDotCH/ecommerce-connector-for-mautic): sends orders, refunds, cancellations and the product catalog, signed with the connector's webhook secret.
 
-Status: 0.1.0, in development. Storefront events (product views, cart, checkout) follow in 0.2.
+Status: 0.3.0, in development.
 
 ## What it sends
 
@@ -23,7 +23,7 @@ Unpaid orders (pending, on-hold, failed) are not sent. Contacts are never create
 
 Off by default: switch on **Send storefront events** here, and **Record storefront events** in Mautic. Mautic then runs the abandoned cart, checkout and browsing campaigns (with `mautic:ecommerce:abandonment` in its cron).
 
-* **Who**: only shoppers whose email is known: logged-in customers, or guests once they entered their email at checkout. Anonymous visitors are not sent, and are not linked through Mautic's tracking cookie, because a visitor can change that cookie to name someone else's contact.
+* **Who**: only known shoppers: logged-in customers, guests once they entered their email at checkout, and guests who arrived from a link in a Mautic email. For those, the link's `ct` parameter is kept in the WooCommerce session as received and sent with their events; Mautic identifies the email's recipient from the random tracking hash in it, never from the contact ID in it, which anyone can change. A forwarded email therefore attributes the reader's visit to the original recipient, as Mautic's own tracking does. Anonymous visitors are not sent, and are not linked through Mautic's tracking cookie, because a visitor can change that cookie to name someone else's contact.
 * **Consent**: by default, events are sent only with *marketing* consent from a consent plugin that supports the [WP Consent API](https://wordpress.org/plugins/wp-consent-api/) (for example Complianz or CookieYes). Choose "Always" only if the shop handles consent another way. Do Not Track and Global Privacy Control always stop events.
 * **Restore-cart links**: each cart and checkout event carries a link (`?mautic_restore_cart=…`) that rebuilds that cart for 14 days; Mautic's `{ecommerce_cart_url}` token uses it. The link stores product IDs and quantities only.
 * **Caching**: product views are recorded when WordPress renders the page. Page caches usually skip logged-in shoppers and never cache cart or checkout, but cached product pages for guests send no views.
@@ -32,10 +32,11 @@ Sending runs in the background through WooCommerce's Action Scheduler (Tools →
 
 ## Setup
 
-1. In Mautic, install the Ecommerce Connector (1.7.0 or later), activate it and set a webhook secret.
+1. In Mautic, install the Ecommerce Connector (1.7.0 or later; **Test connection** and guests from Mautic emails need the build with `/ecommerce/ping`), activate it and set a webhook secret.
 2. Install and activate this plugin.
 3. In WooCommerce → Settings → **Mautic**: the Mautic URL, the same webhook secret, and a store name (default `woocommerce`; it becomes the order source and catalog name in Mautic).
-4. Send the catalog and past orders once:
+4. Click **Test connection** under *Connection and sync*. It sends a signed request and says whether Mautic accepted the secret.
+5. Send the catalog and past orders once with **Send all products** and **Send past orders** (optionally from a date). Both run in the background, 100 at a time; reload the page to see the progress. A sync that stopped on an error resumes where it stopped when started again. From the command line:
 
    ```bash
    wp mautic-ecommerce sync products
@@ -44,7 +45,29 @@ Sending runs in the background through WooCommerce's Action Scheduler (Tools →
 
    Mautic never triggers campaigns for orders placed more than a day before they arrive, so the order import sends no emails.
 
-`wp mautic-ecommerce status` shows the settings. Mautic answers every request with 204; requests it rejects (wrong secret, invalid data) are explained in Mautic's log.
+`wp mautic-ecommerce status` shows the settings, `wp mautic-ecommerce test` tests the connection. Mautic answers every request with 204; requests it rejects (wrong secret, invalid data) are explained in Mautic's log.
+
+## Development
+
+The tests run inside a real WordPress with WooCommerce (wp-phpunit) against their own database, which they empty on every run: never use a shop's database. Outgoing requests go to a fake Mautic and never leave the machine.
+
+Create `tests/config.local.php` (not committed) for your machine; environment variables work too (see `tests/wp-tests-config.php`):
+
+```php
+<?php
+return [
+    'abspath'     => '/path/to/wordpress',
+    'woocommerce' => '/path/to/wordpress/wp-content/plugins/woocommerce',
+    'db_name'     => 'woo_test',
+    'db_user'     => 'woo_test',
+    'db_password' => '…',
+];
+```
+
+```bash
+composer install
+composer test
+```
 
 ## Requirements
 

@@ -32,6 +32,17 @@ final class Cli
     }
 
     /**
+     * Checks the Mautic URL and webhook secret with a signed request.
+     *
+     * @subcommand test
+     */
+    public function test(): void
+    {
+        $result = $this->client->ping();
+        $result['ok'] ? \WP_CLI::success($result['message']) : \WP_CLI::error($result['message']);
+    }
+
+    /**
      * Sends all products, or all paid, refunded and cancelled orders, to Mautic now.
      *
      * ## OPTIONS

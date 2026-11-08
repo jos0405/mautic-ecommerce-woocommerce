@@ -149,6 +149,17 @@ final class Settings
                 'type' => 'sectionend',
                 'id'   => 'mautic_ecommerce_section',
             ],
+            [
+                'title' => __('Connection and sync', 'mautic-ecommerce-woocommerce'),
+                'type'  => 'title',
+                'id'    => 'mautic_ecommerce_tools_section',
+            ],
+            // No "id": WooCommerce saves nothing for it; AdminTools renders the buttons.
+            ['type' => AdminTools::FIELD_TYPE],
+            [
+                'type' => 'sectionend',
+                'id'   => 'mautic_ecommerce_tools_section',
+            ],
         ];
     }
 }

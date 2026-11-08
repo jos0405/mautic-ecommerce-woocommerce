@@ -18,6 +18,8 @@ final class Plugin
         $orders   = new OrderSync($settings, $queue);
         $restore  = new CartRestore();
         $events   = new StorefrontEvents($settings, $queue, $restore);
+        $bulkSync = new BulkSync($client, $products, $orders);
+        $tools    = new AdminTools($settings, $client, $bulkSync);
 
         $settings->register();
         $queue->register();
@@ -25,6 +27,11 @@ final class Plugin
         $orders->register();
         $restore->register();
         $events->register();
+        $bulkSync->register();
+
+        if (is_admin()) {
+            $tools->register();
+        }
 
         if (defined('WP_CLI') && WP_CLI) {
             \WP_CLI::add_command('mautic-ecommerce', new Cli($settings, $client, $products, $orders));

@@ -119,6 +119,8 @@ final class OrderSync
         ];
     }
 
+    public const BATCH_SIZE = 100;
+
     /**
      * Sends paid, refunded and cancelled orders, oldest first. Mautic never triggers campaigns
      * for orders placed more than a day before they arrive, so this sends no emails.
@@ -131,28 +133,50 @@ final class OrderSync
         $page = 1;
 
         do {
-            $query = [
-                'status'  => array_map(static fn (string $status): string => 'wc-'.$status, array_keys(self::STATUSES)),
-                'type'    => 'shop_order',
-                'limit'   => 100,
-                'page'    => $page++,
-                'orderby' => 'date',
-                'order'   => 'ASC',
-            ];
-            if (null !== $since) {
-                $query['date_created'] = '>='.$since;
+            $batch = $this->syncPage($client, $since, $page++);
+            if ($batch['sent'] > 0) {
+                $sent += $batch['sent'];
+                $progress($sent);
             }
-
-            $orders = wc_get_orders($query);
-            foreach ($orders as $order) {
-                $payload = $order instanceof \WC_Order ? $this->build($order) : null;
-                if (null !== $payload) {
-                    $client->send('order', array_diff_key($payload, ['_endpoint' => true]));
-                    $progress(++$sent);
-                }
-            }
-        } while (100 === count($orders));
+        } while (self::BATCH_SIZE === $batch['fetched']);
 
         return $sent;
+    }
+
+    /**
+     * Sends one page of BATCH_SIZE orders, oldest first; the bulk sync runs page by page.
+     *
+     * @param string|null $since YYYY-MM-DD: only orders created on or after this day
+     *
+     * @return array{fetched: int, sent: int} fetched below BATCH_SIZE means this was the last page
+     *
+     * @throws \RuntimeException when Mautic cannot be reached
+     */
+    public function syncPage(Client $client, ?string $since, int $page): array
+    {
+        $query = [
+            'status'  => array_map(static fn (string $status): string => 'wc-'.$status, array_keys(self::STATUSES)),
+            'type'    => 'shop_order',
+            'limit'   => self::BATCH_SIZE,
+            'page'    => max(1, $page),
+            'orderby' => 'date',
+            'order'   => 'ASC',
+        ];
+        if (null !== $since && '' !== $since) {
+            $query['date_created'] = '>='.$since;
+        }
+
+        $orders = wc_get_orders($query);
+        $sent   = 0;
+
+        foreach ($orders as $order) {
+            $payload = $order instanceof \WC_Order ? $this->build($order) : null;
+            if (null !== $payload) {
+                $client->send('order', array_diff_key($payload, ['_endpoint' => true]));
+                ++$sent;
+            }
+        }
+
+        return ['fetched' => count($orders), 'sent' => $sent];
     }
 }
