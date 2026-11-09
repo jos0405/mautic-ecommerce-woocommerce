@@ -18,6 +18,7 @@ final class Plugin
         $orders   = new OrderSync($settings, $queue);
         $restore  = new CartRestore();
         $events   = new StorefrontEvents($settings, $queue, $restore);
+        $focus    = new FocusPrompt($settings, $events);
         $bulkSync = new BulkSync($client, $products, $orders);
         $weekly   = new WeeklySync($settings, $bulkSync);
         $coupons  = new CouponEndpoint($settings);
@@ -29,6 +30,7 @@ final class Plugin
         $orders->register();
         $restore->register();
         $events->register();
+        $focus->register();
         $bulkSync->register();
         $weekly->register();
         $coupons->register();

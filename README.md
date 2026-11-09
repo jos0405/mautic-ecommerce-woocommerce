@@ -2,7 +2,7 @@
 
 Connects a WooCommerce shop to the [Ecommerce Connector for Mautic](https://github.com/FriendlyDotCH/ecommerce-connector-for-mautic): sends orders, refunds, cancellations and the product catalog, signed with the connector's webhook secret.
 
-Status: 0.5.1, in development.
+Status: 0.6.0, in development.
 
 ## What it sends
 
@@ -30,6 +30,15 @@ Off by default: switch on **Send storefront events** here, and **Record storefro
 * **Caching**: product views are recorded when WordPress renders the page. Page caches usually skip logged-in shoppers and never cache cart or checkout, but cached product pages for guests send no views.
 
 Sending runs in the background through WooCommerce's Action Scheduler (Tools → Scheduled Actions, group `mautic-ecommerce`), so checkout and product saves never wait for Mautic. On low-traffic shops, run WP-Cron from a real cron job so queued sends are not delayed.
+
+## Popup for anonymous visitors
+
+Shows a Mautic focus item (a popup, bar or slide-in, for example with a sign-up form) to visitors the shop does not know, once they viewed several different products. Off until you enter the focus item's ID under **Popup for anonymous visitors**; **Show after viewing** sets how many different products within 24 hours (default 3). From then on, the focus item is loaded on every page, and Mautic decides when and how often it appears (its *When to engage*, *How often* and page settings). Tick **Stop after conversion** in Mautic, so that a sign-up ends it.
+
+* **Only anonymous visitors**: never logged-in customers, guests who entered their email at checkout or placed an order, or visitors who arrived from a Mautic email link. Once the shop knows a visitor, it sets the cookie `mautic_ecommerce_known` for a year, so the popup stays away after the WooCommerce session ends. The cookie holds only `1`, no email or ID; faking it only hides the popup. A visitor who converted in the focus item (Mautic's `mautic_focus_<id>` cookie is `-1`) gets the cookie too. A known customer on a new device who is not logged in and did not come from an email cannot be recognised.
+* **Consent**: follows **Consent for tracking**. With the WP Consent API, nothing is counted or loaded without *marketing* consent; Do Not Track and Global Privacy Control always stop it.
+* **Counting in the browser**: product views are counted by a small script in the browser's local storage (product IDs and times only, nothing sent anywhere), because guests' product pages are often served from a page cache. The script is the same for every visitor, so it works with page caches.
+* **After a sign-up**: the focus item's form tells Mautic the email, not the shop, so the shop still sends no storefront events for that visitor until they log in, check out or come back from a Mautic email.
 
 ## Coupons from Mautic
 

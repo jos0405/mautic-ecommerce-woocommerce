@@ -156,12 +156,28 @@ final class StorefrontEvents
         return is_string($ct) && self::isClickthrough($ct) ? $ct : null;
     }
 
+    /**
+     * Whether this visitor is known to the shop, with or without consent: logged in, an email
+     * entered at checkout, a Mautic email link kept in the session, or one on this request.
+     * Used only to hold back the popup for anonymous visitors, never to identify anyone.
+     */
+    public function isKnownShopper(): bool
+    {
+        if (null !== $this->shopperEmail() || null !== self::sessionClickthrough()) {
+            return true;
+        }
+
+        $ct = isset($_GET['ct']) && is_string($_GET['ct']) ? wp_unslash($_GET['ct']) : '';
+
+        return self::isClickthrough($ct);
+    }
+
     private function shopperEmail(): ?string
     {
         $user  = wp_get_current_user();
         $email = $user->exists() ? $user->user_email : '';
 
-        if ('' === $email && null !== WC()->customer) {
+        if ('' === $email && function_exists('WC') && null !== WC()->customer) {
             $email = (string) WC()->customer->get_billing_email();
         }
 
@@ -191,7 +207,7 @@ final class StorefrontEvents
         $delay > 0 ? $this->queue->pushLater('event', ['key' => $key], $delay) : $this->queue->push('event', ['key' => $key]);
     }
 
-    private function hasConsent(): bool
+    public function hasConsent(): bool
     {
         // Browser opt-outs win over everything.
         if ('1' === ($_SERVER['HTTP_DNT'] ?? '') || '1' === ($_SERVER['HTTP_SEC_GPC'] ?? '')) {
