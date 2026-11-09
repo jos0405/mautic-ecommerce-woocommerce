@@ -2,7 +2,7 @@
 
 Connects a WooCommerce shop to the [Ecommerce Connector for Mautic](https://github.com/FriendlyDotCH/ecommerce-connector-for-mautic): sends orders, refunds, cancellations and the product catalog, signed with the connector's webhook secret.
 
-Status: 0.5.0, in development.
+Status: 0.5.1, in development.
 
 ## What it sends
 
@@ -10,7 +10,7 @@ Status: 0.5.0, in development.
 |------|------|-----------------|
 | An order becomes processing or completed | The order: number, total, currency, paid date, billing email, shipping city, line items (SKU or variation/product ID, product ID, name, quantity, unit price incl. tax, main category), the coupon codes used, and the Mautic email link the shopper came from (`ct`, with consent) so Mautic credits that email and campaign | `/ecommerce/order` |
 | A refund (partial or full) or a cancellation | The same order again, with `status`, `refunded_total` and `refunded_qty` per line; Mautic updates it | `/ecommerce/order` |
-| A product is created, saved, changes stock, or is trashed/deleted | The product: ID, SKU, name, link, image, prices, categories and main category, variation IDs, stock, status | `/ecommerce/product` |
+| A product is created, saved, changes stock, or is trashed/deleted | The product: ID, SKU, name, link, image, prices, categories and main category, variation IDs, stock, status, created date (for new arrivals in Mautic) | `/ecommerce/product` |
 | Once a week, at night | All products again, in case Mautic missed a change (**Weekly full product sync**, on by default) | `/ecommerce/product` |
 | A known shopper views a product | `viewed_product` with the product | `/ecommerce/event` |
 | A known shopper changes their cart | `added_to_cart` with the cart contents, total and a restore-cart link, 60 seconds after the last change | `/ecommerce/event` |

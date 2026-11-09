@@ -3,7 +3,7 @@
  * Plugin Name:       Mautic Ecommerce for WooCommerce
  * Plugin URI:        https://github.com/jos0405/mautic-ecommerce-woocommerce
  * Description:       Sends orders, refunds and the product catalog to Mautic's Ecommerce Connector.
- * Version:           0.5.0
+ * Version:           0.5.1
  * Requires at least: 6.5
  * Requires PHP:      8.1
  * WC requires at least: 8.0
@@ -16,7 +16,7 @@ declare(strict_types=1);
 
 defined('ABSPATH') || exit;
 
-const MAUTIC_ECOMMERCE_WC_VERSION = '0.5.0';
+const MAUTIC_ECOMMERCE_WC_VERSION = '0.5.1';
 const MAUTIC_ECOMMERCE_WC_FILE    = __FILE__;
 
 spl_autoload_register(static function (string $class): void {

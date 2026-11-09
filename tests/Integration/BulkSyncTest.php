@@ -43,6 +43,7 @@ final class BulkSyncTest extends TestCase
         $this->assertCount(ProductSync::BATCH_SIZE, $requests[0]['json']['products']);
         $this->assertSame('teststore', $requests[0]['json']['store']);
         $this->assertCount(1, $requests[1]['json']['products']);
+        $this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/', $requests[0]['json']['products'][0]['created_at']);
 
         $state = $this->bulkSync->state('products');
         $this->assertSame(BulkSync::DONE, $state['status']);

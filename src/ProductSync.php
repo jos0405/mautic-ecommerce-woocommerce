@@ -76,6 +76,7 @@ final class ProductSync
     {
         $imageId  = (int) $product->get_image_id();
         $modified = $product->get_date_modified();
+        $created  = $product->get_date_created();
 
         return [
             'id'             => (string) $product->get_id(),
@@ -94,6 +95,8 @@ final class ProductSync
             'stock_status'   => $product->get_stock_status(),
             'stock_quantity' => $product->managing_stock() ? (int) $product->get_stock_quantity() : null,
             'status'         => $product->get_status(),
+            // When the product was added to the shop; Mautic's new arrivals block sorts by it.
+            'created_at'     => $created ? $created->format(DATE_ATOM) : null,
             'updated_at'     => $modified ? $modified->format(DATE_ATOM) : null,
         ];
     }
